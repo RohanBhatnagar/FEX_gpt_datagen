@@ -170,6 +170,8 @@ def generate_data(num_fns):
     for i in range(num_fns):
         actions = [] 
         for j in range(len(structure_choice)):
+            #create actions array by selecting a random number from 0, struture_choice[i]
+            # remember to add it as a tensor 
             
     def sample(self, batch_size=1, step=0):
         """Samples a set of `args.num_blocks` many computational nodes from the
