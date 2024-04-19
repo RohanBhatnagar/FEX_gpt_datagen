@@ -111,6 +111,7 @@ if __name__ =='__main__':
     actions = []
     for i in range(0,7):
         actions.append(torch.LongTensor([torch.randint(0,3,(1,1))]))
+    
     function = lambda x: compute_by_tree(get_function(actions), x)
     x = torch.FloatTensor([[-1], [1]])
 
