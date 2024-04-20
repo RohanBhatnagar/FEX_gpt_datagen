@@ -97,6 +97,28 @@ def inorder_test(tree, actions):
         count = count + 1
         inorder(tree.rightChild, actions)
 
+
+def generate_postfix(tree):
+    """
+    Generate the postfix notation of the binary expression tree.
+
+    Args:
+    tree (BinaryTree): The root of the binary expression tree.
+
+    Returns:
+    list: A list of tokens in postfix order.
+    """
+    if tree is None:
+        return []
+    
+    left_postfix = generate_postfix(tree.leftChild)
+    right_postfix = generate_postfix(tree.rightChild)
+    
+    if tree.is_unary:
+        return left_postfix + right_postfix + [tree.key.__name__ if hasattr(tree.key, '__name__') else str(tree.key)]
+    else:
+        return left_postfix + right_postfix + [tree.key.__name__ if hasattr(tree.key, '__name__') else str(tree.key)]
+
 if __name__ =='__main__':
     # tree = BinaryTree(np.add)
     # tree.insertLeft(np.multiply)

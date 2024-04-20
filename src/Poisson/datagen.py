@@ -1,6 +1,11 @@
+import random
+
+from regex import F
+import torch
 import function as func
 import argparse
 from computational_tree import BinaryTree
+import numpy as np
 
 parser = argparse.ArgumentParser(description='NAS')
 
@@ -167,9 +172,12 @@ def get_function(actions):
 
 def generate_data(num_fns):
     # write to a file later 
+    functions = []
     for i in range(num_fns):
-        actions = [] 
-        for j in range(len(structure_choice)):
+        actions = np.random.randint(0, structure_choice[i])
+        functions.append(get_function(actions))
+
+
             #create actions array by selecting a random number from 0, struture_choice[i]
             # remember to add it as a tensor 
             
