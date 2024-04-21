@@ -20,9 +20,7 @@ args = parser.parse_args()
 
 unary = func.unary_functions
 binary = func.binary_functions
-binary_functions_str_readable = func.binary_functions_str_readable
 unary_functions_str = func.unary_functions_str
-unary_functions_str_readable = func.unary_functions_str_readable
 unary_functions_str_leaf = func.unary_functions_str_leaf
 binary_functions_str = func.binary_functions_str
 
@@ -170,33 +168,30 @@ def inorder(tree, actions):
         inorder(tree.rightChild, actions)
 
 
+# forms final syms function from a computational tree
 def sp_function(tree):
-    if tree is None: 
-        return ""
-    if tree.leftChild is None and tree.rightChild is None: 
-        return tree.key
+    if tree is None:
+        return None
+    elif tree.rightChild is None and tree.leftChild is None:
+        return tree.key(x, 2)
+    elif tree.rightChild is None: 
+        return tree.key(sp_function(tree.leftChild), 2) #random number for 5
+    else: 
+        return tree.key(sp_function(tree.leftChild), sp_function(tree.rightChild)) #random number for 5
 
+# prints a computational binary tree
 def print_fmla(tree):
-    """
-    Prettyprints fmla for a tree.
-
-    Args:
-    tree (BinaryTree): The root of the binary expression tree.
-
-    Returns:
-    list: A list of tokens in postfix order.
-    """
     if tree is None:
         return ""
     if tree.leftChild is None and tree.rightChild is None:
-        return func.unary_leaf_map[tree.key].format('x')
+        return func.unary_functions_str[tree.action].format('2','x')
     elif tree.rightChild is None:
         left_postfix = print_fmla(tree.leftChild) 
-        return func.function_map[tree.key].format('?',left_postfix,'?')
+        return func.unary_functions_str[tree.action].format('2',left_postfix)
     else:
         left_postfix = print_fmla(tree.leftChild) 
         right_postfix = print_fmla(tree.rightChild) 
-        return func.function_map[tree.key].format(left_postfix,right_postfix) #[tree.key.__name__ if hasattr(tree.key, '__name__') else str(tree.key)]
+        return func.binary_functions_str[tree.action].format(left_postfix,right_postfix) #[tree.key.__name__ if hasattr(tree.key, '__name__') else str(tree.key)]
 
 def get_function(actions):
     global count
@@ -218,6 +213,7 @@ def generate_data(num_fns):
     for idx, fun in enumerate(functions):
         print("Function: ", idx)
         print(print_fmla(fun))
+        print(sp_function(fun))
 
 if __name__ == '__main__':
     generate_data(10)

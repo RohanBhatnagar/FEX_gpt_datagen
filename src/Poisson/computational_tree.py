@@ -34,7 +34,7 @@ class BinaryTree(object):
 def compute_by_tree(tree, x):
     ''' judge whether a emtpy tree, if yes, that means the leaves and call the unary operation '''
     if tree.leftChild == None and tree.rightChild == None:
-        return tree.key(x)
+        return tree.key(x, 3)
     elif tree.leftChild == None and tree.rightChild is not None:
         return tree.key(compute_by_tree(tree.rightChild, x))
     elif tree.leftChild is not None and tree.rightChild == None:
@@ -133,21 +133,22 @@ if __name__ =='__main__':
     # print(compute_by_tree(tree, 30)) # np.sin(30)*np.cos(30)+np.sin(30)
     # inorder(tree)
     # inorder_w_idx(tree)
-    import torch
-    bs_action = [torch.LongTensor([10]), torch.LongTensor([2]),torch.LongTensor([9]),torch.LongTensor([1]),torch.LongTensor([0]),torch.LongTensor([2]),torch.LongTensor([6])]
-    actions = []
-    for i in range(0,7):
-        actions.append(torch.LongTensor([torch.randint(0,3,(1,1))]))
+    # import torch
+    # bs_action = [torch.LongTensor([10]), torch.LongTensor([2]),torch.LongTensor([9]),torch.LongTensor([1]),torch.LongTensor([0]),torch.LongTensor([2]),torch.LongTensor([6])]
+    # actions = []
+    # for i in range(0,7):
+    #     actions.append(torch.LongTensor([torch.randint(0,3,(1,1))]))
     
-    function = lambda x: compute_by_tree(get_function(actions), x)
-    x = torch.FloatTensor([[-1], [1]])
+    # function = lambda x: compute_by_tree(get_function(actions), x)
+    # x = torch.FloatTensor([[-1], [1]])
 
-    count = 0
-    tr = basic_tree()
-    inorder_test(tr, actions)
-    # f = binary[0](unary[2](x, 5), unary[4](x, 90))
-    # print(f)
-    # df = sp.diff(f, x)
-    # print(df)
+    # count = 0
+    # tr = basic_tree()
+    # inorder_test(tr, actions)
+    f = binary[0](unary[2](x, 5), unary[4](x, 90))
+    print(f)
+    df = sp.diff(f, x)
+    print(df)
+
     count = 0
 
