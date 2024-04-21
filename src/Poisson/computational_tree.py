@@ -4,9 +4,14 @@ unary = func.unary_functions
 binary = func.binary_functions
 unary_functions_str = func.unary_functions_str
 binary_functions_str = func.binary_functions_str
+import sympy as sp
+
+x, y= sp.symbols('x y')  # Define symbols used in your functions
+
 
 class BinaryTree(object):
     def __init__(self,item,is_unary=True):
+        self.action=0
         self.key=item
         self.is_unary=is_unary
         self.leftChild=None
@@ -129,7 +134,7 @@ if __name__ =='__main__':
     # inorder(tree)
     # inorder_w_idx(tree)
     import torch
-    # bs_action = [torch.LongTensor([10]), torch.LongTensor([2]),torch.LongTensor([9]),torch.LongTensor([1]),torch.LongTensor([0]),torch.LongTensor([2]),torch.LongTensor([6])]
+    bs_action = [torch.LongTensor([10]), torch.LongTensor([2]),torch.LongTensor([9]),torch.LongTensor([1]),torch.LongTensor([0]),torch.LongTensor([2]),torch.LongTensor([6])]
     actions = []
     for i in range(0,7):
         actions.append(torch.LongTensor([torch.randint(0,3,(1,1))]))
@@ -140,5 +145,9 @@ if __name__ =='__main__':
     count = 0
     tr = basic_tree()
     inorder_test(tr, actions)
+    # f = binary[0](unary[2](x, 5), unary[4](x, 90))
+    # print(f)
+    # df = sp.diff(f, x)
+    # print(df)
     count = 0
 
