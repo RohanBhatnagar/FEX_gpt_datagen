@@ -9,7 +9,7 @@ import torch.nn as nn
 import numpy as np
 import sympy as sp
 
-x, y= sp.symbols('x y')  # Define symbols used in your functions
+x, y = sp.symbols('x y')  # Define symbols used in your functions
 
 parser = argparse.ArgumentParser(description='NAS')
 
@@ -201,6 +201,12 @@ def get_function(actions):
     count = 0
     return computation_tree
 
+def negative_laplacian(f):
+    f_xx = sp.diff(f, x, x)
+    neg_laplace = f_xx # adjust as per symbols
+    return -1*neg_laplace
+
+
 def generate_data(num_fns):
     # write to a file later 
     functions = []
@@ -211,9 +217,12 @@ def generate_data(num_fns):
         computational_tree = get_function(actions)
         functions.append(computational_tree)
     for idx, fun in enumerate(functions):
+        # logger 
         print("Function: ", idx)
         print(print_fmla(fun))
-        print(sp_function(fun))
+        f = sp_function(fun)
+        print("function", f)
+        print("negative laplacian", negative_laplacian(f))
 
 if __name__ == '__main__':
     generate_data(10)
