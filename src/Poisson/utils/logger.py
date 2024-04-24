@@ -108,6 +108,7 @@ if __name__ == '__main__':
     # logger.set_names(['Train loss', 'Valid loss','Test loss'])
 
     # length = 100
+    
     # t = np.arange(length)
     # train_loss = np.exp(-t / 10.0) + np.random.rand(length) * 0.1
     # valid_loss = np.exp(-t / 10.0) + np.random.rand(length) * 0.1

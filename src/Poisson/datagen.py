@@ -8,6 +8,7 @@ from computational_tree import BinaryTree
 import torch.nn as nn 
 import numpy as np
 import sympy as sp
+from utils.logger import Logger
 
 x, y = sp.symbols('x y')  # Define symbols used in your functions
 
@@ -158,12 +159,12 @@ def inorder(tree, actions):
             action = action
             tree.key = unary[action]
             tree.action=action
-            print(count, action, func.unary_functions_str[action])
+            # print(count, action, func.unary_functions_str[action])
         else:
             action = action
             tree.key = binary[action]
             tree.action = action
-            print(count, action, func.binary_functions_str[action])
+            # print(count, action, func.binary_functions_str[action])
         count = count + 1
         inorder(tree.rightChild, actions)
 
@@ -216,13 +217,27 @@ def generate_data(num_fns):
             actions.append(torch.LongTensor([torch.randint(0,structure_choice[j],(1,1))]))
         computational_tree = get_function(actions)
         functions.append(computational_tree)
+
+    logger = Logger('functions_log.txt', title = "dataset")
+    logger.set_names(["Fn_Number", "function", "simplified_function", "negative_laplacian"])
+
+    
     for idx, fun in enumerate(functions):
-        # logger 
-        print("Function: ", idx)
-        print(print_fmla(fun))
         f = sp_function(fun)
-        print("function", f)
-        print("negative laplacian", negative_laplacian(f))
+        neg_lap_f = negative_laplacian(f)
+        fun_string = print_fmla(fun)
+        logger.append([str(idx), fun_string, str(f), str(neg_lap_f)])
+
+        # logger 
+        # print("Function: ", idx)
+        # print(print_fmla(fun))
+        # print("Simplified Function :", f)
+        # print("Negative Laplacian :", neg_lap_f)
+
+    
+
+
+    
 
 if __name__ == '__main__':
     generate_data(10)
