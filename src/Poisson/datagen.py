@@ -14,7 +14,7 @@ x, y = sp.symbols('x y')  # Define symbols used in your functions
 
 parser = argparse.ArgumentParser(description='NAS')
 
-parser.add_argument('--tree', default='depth2', type=str)
+parser.add_argument('--tree', default='depth1', type=str)
 parser.add_argument('--num', default=10, type=int)
 
 args = parser.parse_args()
@@ -204,12 +204,11 @@ def get_function(actions):
 
 def negative_laplacian(f):
     f_xx = sp.diff(f, x, x)
-    neg_laplace = f_xx # adjust as per symbols
+    neg_laplace = f_xx # adjust as per symbols, may have several variables 
     return -1*neg_laplace
 
 
 def generate_data(num_fns):
-    # write to a file later 
     functions = []
     for i in range(num_fns):
         actions = []
@@ -219,26 +218,15 @@ def generate_data(num_fns):
         functions.append(computational_tree)
 
     logger = Logger('functions_log.txt', title = "dataset")
-    logger.set_names(["Fn_Number", "function", "simplified_function", "negative_laplacian"])
-
+    logger.set_names(["Fn_Number", "simplified_function", "negative_laplacian"])
     
     for idx, fun in enumerate(functions):
         f = sp_function(fun)
         neg_lap_f = negative_laplacian(f)
         fun_string = print_fmla(fun)
-        logger.append([str(idx), fun_string, str(f), str(neg_lap_f)])
-
-        # logger 
-        # print("Function: ", idx)
-        # print(print_fmla(fun))
-        # print("Simplified Function :", f)
-        # print("Negative Laplacian :", neg_lap_f)
-
-    
-
-
+        logger.append(['Idx:' + str(idx) + '\n', 'Function: ' + str(f) + '\n', 'Negative Laplacian: ' + str(neg_lap_f)])
     
 
 if __name__ == '__main__':
-    generate_data(10)
+    generate_data(25)
     print("main")
