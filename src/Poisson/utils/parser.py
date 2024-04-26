@@ -30,10 +30,8 @@ operators = {
 }
 
 class Parser(object):
-    def __init__(self, function_str): 
-        self.function_str = function_str 
-    
-    def add_parens(self, list): 
+    # wrap trig functions and exp in parentheses to handle raising them to a power
+    def wrap_operators(self, list): 
         idx = 0 
         while idx < len(list): 
             if list[idx] in ['SIN', 'COS', 'EXP']:
@@ -52,33 +50,33 @@ class Parser(object):
                     idx2 += 1
             idx += 1
         return list
-            
 
-    def make_infix(self):
+    # return infix list given a function str    
+    def make_infix(self, function_str):
         operator_list = [] 
         # order of operations here matters, adding extra commas to separate constants
-        self.function_str = re.sub(r'\*\*2', ',^2,', self.function_str)
-        self.function_str = re.sub(r'\*\*3', ',^3,', self.function_str)
-        self.function_str = re.sub(r'\*\*4', ',^4,', self.function_str)
-        self.function_str = re.sub(r'exp', ',EXP,', self.function_str)
-        self.function_str = re.sub(r'sin', ',SIN,', self.function_str)
-        self.function_str = re.sub(r'cos', ',COS,', self.function_str)
-        self.function_str = re.sub(r'x', ',X,', self.function_str)
-        self.function_str = re.sub(r'\*', ',*,', self.function_str)
-        self.function_str = re.sub(r'\+', ',+,', self.function_str)
-        self.function_str = re.sub(r'\-', ',-,', self.function_str)
-        self.function_str = re.sub(r'\(', ',(,', self.function_str)
-        self.function_str = re.sub(r'\)', ',),', self.function_str)
+        function_str = re.sub(r'\*\*2', ',^2,', function_str)
+        function_str = re.sub(r'\*\*3', ',^3,', function_str)
+        function_str = re.sub(r'\*\*4', ',^4,', function_str)
+        function_str = re.sub(r'exp', ',EXP,', function_str)
+        function_str = re.sub(r'sin', ',SIN,', function_str)
+        function_str = re.sub(r'cos', ',COS,', function_str)
+        function_str = re.sub(r'x', ',X,', function_str)
+        function_str = re.sub(r'\*', ',*,', function_str)
+        function_str = re.sub(r'\+', ',+,', function_str)
+        function_str = re.sub(r'\-', ',-,', function_str)
+        function_str = re.sub(r'\(', ',(,', function_str)
+        function_str = re.sub(r'\)', ',),', function_str)
 
-        operator_list = self.function_str.split(',')
+        operator_list = function_str.split(',')
         operator_list = [operator.replace(' ', '') for operator in operator_list]
         operator_list = [operator for operator in operator_list if operator != '']
         const_pattern = re.compile(r'(\d+)')
         operator_list = ['const' if const_pattern.match(operator) else operator for operator in operator_list]
 
-        return operator_list
+        return self.wrap_operators(operator_list)
 
-
+    # generate postfix list, given infix list 
     def make_postfix(self, infix_list): 
         class Stack:
             def __init__(self):
@@ -135,8 +133,8 @@ class Parser(object):
         return operator_list
             
 if __name__ == '__main__':
-    parser = Parser('4*cos(2*x+x**2)**2')
-    infix_list = parser.add_parens(parser.make_infix())
+    parser = Parser()
+    infix_list = parser.make_infix('4*cos(2*x+x**2)**2')
     print(infix_list)
     postfix = parser.make_postfix(infix_list)
     print(postfix)
