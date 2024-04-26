@@ -73,8 +73,20 @@ class Parser(object):
         operator_list = function_str.split(',')
         operator_list = [operator.replace(' ', '') for operator in operator_list]
         operator_list = [operator for operator in operator_list if operator != '']
-        const_pattern = re.compile(r'(\d+)')
-        operator_list = ['const' if const_pattern.match(operator) else operator for operator in operator_list]
+        # neg_const = re.compile(r'(-\d+)')
+        # pos_const = re.compile(r'(\d+)')
+        # operator_list = ['n_const' if neg_const.match(operator) else 'p_const' if pos_const.match(operator) else operator for operator in operator_list]
+        for idx, token in enumerate(operator_list): 
+            if token == '-':
+                if idx == 0 and operator_list[idx + 1] == 'const':
+                    operator_list[idx+1] = 'n_const'
+                    operator_list[idx] = 'REMOVE'
+                elif idx > 0 and operator_list[idx-1] == '(':
+                    operator_list[idx+1] = 'n_const'
+                    operator_list[idx] = 'REMOVE'   
+
+        pos_const = re.compile(r'(\d+)')
+        operator_list = ['n_const' if neg_const.match(operator) else 'p_const' if pos_const.match(operator) else operator for operator in operator_list]
 
         # function_str = re.sub(r'\*\*2', ',^2,', function_str)
         # function_str = re.sub(r'\*\*3', ',^3,', function_str)
@@ -88,18 +100,22 @@ class Parser(object):
         # function_str = re.sub(r'\(', ',(,', function_str)
         # function_str = re.sub(r'\)', ',),', function_str)
         
-        # # New regex to handle minus as unary (negative numbers) and binary (subtraction)
+        # New regex to handle minus as unary (negative numbers) and binary (subtraction)
         # function_str = re.sub(r'(?<=\d)\-', ',-,', function_str)  # For subtraction
         # function_str = re.sub(r'(?<![\d\w])\-', ',-', function_str)  # For negative numbers
 
-        # # Split and filter empty strings
+        # Unary negative at the start or after an open parenthesis
+        # print(" BEFORE - : " + function_str )
+        # function_str = re.sub(r'(?<=^)\-', ',-', function_str)
+        # # Subtraction (or other uses of hyphen not matched by the previous pattern)
+        # function_str = re.sub(r'(?<!^)\-', ',-,', function_str)
+
+        # Split and filter empty strings
         # operator_list = [token for token in function_str.split(',') if token.strip()]
 
         # # Replace numbers with 'const' token
         # const_pattern = re.compile(r'^-?\d+(\.\d+)?$')  # Matches integers and decimals, negative or positive
         # operator_list = ['const' if const_pattern.match(token) else token for token in operator_list]
-
-        # return self.wrap_operators(operator_list)
 
         return self.wrap_operators(operator_list)
 
@@ -161,7 +177,7 @@ class Parser(object):
             
 if __name__ == '__main__':
     parser = Parser()
-    infix_list = parser.make_infix('-4*cos(-2*x-x**2)**2')
+    infix_list = parser.make_infix('-4*cos(-6*x-2*x**2)**2')
     print(infix_list)
     postfix = parser.make_postfix(infix_list)
     print(postfix)
