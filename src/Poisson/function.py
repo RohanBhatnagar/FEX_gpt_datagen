@@ -12,9 +12,9 @@ unary_functions = [
     sp.Lambda((x, c1), 0),               # Essentially 0
     sp.Lambda((x, c1), c1),    # Simplifies to just c1
     sp.Lambda((x, c1), c1*x),  # Simplifies to c1*x
-    sp.Lambda((x, c1), c1*x**2),
-    sp.Lambda((x, c1), c1*x**3),
-    sp.Lambda((x, c1), c1*x**4),
+    sp.Lambda((x, c1), c1*(x)**2),
+    sp.Lambda((x, c1), c1*(x)**3),
+    sp.Lambda((x, c1), c1*(x)**4),
     sp.Lambda((x, c1), c1*sp.exp(x)),
     sp.Lambda((x, c1), c1*sp.sin(x)),
     sp.Lambda((x, c1), c1*sp.cos(x))

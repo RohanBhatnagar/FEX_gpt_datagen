@@ -218,13 +218,14 @@ def generate_data(num_fns):
         functions.append(computational_tree)
 
     logger = Logger('functions_log.txt', title = "dataset")
-    logger.set_names(["Fn_Number", "simplified_function", "negative_laplacian"])
+    logger.set_names(["Fn_Number", "raw function", "simplified_function", "negative_laplacian"])
     
     for idx, fun in enumerate(functions):
         f = sp_function(fun)
+        print(f)
         neg_lap_f = negative_laplacian(f)
         fun_string = print_fmla(fun)
-        logger.append(['Idx:' + str(idx) + '\n', 'Function: ' + str(f) + '\n', 'Negative Laplacian: ' + str(neg_lap_f)])
+        logger.append(['Idx:' + str(idx) + '\n', 'Raw Function: ' + fun_string + '\n', 'Function: ' + str(f) + '\n', 'Negative Laplacian: ' + str(neg_lap_f)])
     
 
 if __name__ == '__main__':

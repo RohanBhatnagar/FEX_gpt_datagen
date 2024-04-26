@@ -24,12 +24,36 @@ operators = {
     'SIN': '2',
     'COS': '2',
     'EXP': '2',
+    '^2': '3',
+    '^3': '3',
+    '^4': '3',
 }
 
 class Parser(object):
     def __init__(self, function_str): 
         self.function_str = function_str 
     
+    def add_parens(self, list): 
+        idx = 0 
+        while idx < len(list): 
+            if list[idx] in ['SIN', 'COS', 'EXP']:
+                paren_counter = 0
+                list.insert(idx, '(')
+                idx += 1
+                idx2 = idx
+                while idx2 < len(list): 
+                    if list[idx2] == '(': 
+                        paren_counter += 1
+                    elif list[idx2] == ')':
+                        paren_counter -= 1
+                        if paren_counter == 0: 
+                            list.insert(idx2, ')')
+                            break
+                    idx2 += 1
+            idx += 1
+        return list
+            
+
     def make_infix(self):
         operator_list = [] 
         # order of operations here matters, adding extra commas to separate constants
@@ -53,6 +77,7 @@ class Parser(object):
         operator_list = ['const' if const_pattern.match(operator) else operator for operator in operator_list]
 
         return operator_list
+
 
     def make_postfix(self, infix_list): 
         class Stack:
@@ -110,10 +135,9 @@ class Parser(object):
         return operator_list
             
 if __name__ == '__main__':
-    parser = Parser('-4*sin(x+x**2)**3')
-    infix_list = parser.make_infix()
+    parser = Parser('4*cos(2*x+x**2)**2')
+    infix_list = parser.add_parens(parser.make_infix())
     print(infix_list)
     postfix = parser.make_postfix(infix_list)
     print(postfix)
 
-    # x x 2 ** + sin 3 ** -4 *
