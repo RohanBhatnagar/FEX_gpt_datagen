@@ -33,9 +33,9 @@ class Parser(object):
     def make_infix(self):
         operator_list = [] 
         # order of operations here matters, adding extra commas to separate constants
-        self.function_str = re.sub(r'x\*\*2', ',X,^2,', self.function_str)
-        self.function_str = re.sub(r'x\*\*3', ',X,^3,', self.function_str)
-        self.function_str = re.sub(r'x\*\*4', ',X,^4,', self.function_str)
+        self.function_str = re.sub(r'\*\*2', ',^2,', self.function_str)
+        self.function_str = re.sub(r'\*\*3', ',^3,', self.function_str)
+        self.function_str = re.sub(r'\*\*4', ',^4,', self.function_str)
         self.function_str = re.sub(r'exp', ',EXP,', self.function_str)
         self.function_str = re.sub(r'sin', ',SIN,', self.function_str)
         self.function_str = re.sub(r'cos', ',COS,', self.function_str)
@@ -110,8 +110,10 @@ class Parser(object):
         return operator_list
             
 if __name__ == '__main__':
-    parser = Parser('-2*(6*x + cos(x))')
+    parser = Parser('-4*sin(x+x**2)**3')
     infix_list = parser.make_infix()
     print(infix_list)
     postfix = parser.make_postfix(infix_list)
     print(postfix)
+
+    # x x 2 ** + sin 3 ** -4 *

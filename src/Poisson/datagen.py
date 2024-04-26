@@ -14,7 +14,7 @@ x, y = sp.symbols('x y')  # Define symbols used in your functions
 
 parser = argparse.ArgumentParser(description='NAS')
 
-parser.add_argument('--tree', default='depth1', type=str)
+parser.add_argument('--tree', default='depth2', type=str)
 parser.add_argument('--num', default=10, type=int)
 
 args = parser.parse_args()
