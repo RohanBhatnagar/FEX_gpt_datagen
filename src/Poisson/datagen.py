@@ -1,22 +1,21 @@
 import random
-
-from regex import F
+import json
 import torch
 import function as func
 import argparse
 from computational_tree import BinaryTree
-import torch.nn as nn 
+import torch.nn as nn
 import numpy as np
 import sympy as sp
 from utils.logger import Logger
-import utils.parser 
+import utils.parser
 
 x, y = sp.symbols('x y')  # Define symbols used in your functions
 
 parser = argparse.ArgumentParser(description='NAS')
 
 parser.add_argument('--tree', default='depth2', type=str)
-parser.add_argument('--num', default=10, type=int)
+parser.add_argument('--num', default=100, type=int)
 
 args = parser.parse_args()
 
@@ -159,16 +158,13 @@ def inorder(tree, actions):
         if tree.is_unary:
             action = action
             tree.key = unary[action]
-            tree.action=action
-            # print(count, action, func.unary_functions_str[action])
+            tree.action = action
         else:
             action = action
             tree.key = binary[action]
             tree.action = action
-            # print(count, action, func.binary_functions_str[action])
         count = count + 1
         inorder(tree.rightChild, actions)
-
 
 # forms final syms function from a computational tree
 def sp_function(tree):
@@ -206,8 +202,7 @@ def get_function(actions):
 def negative_laplacian(f):
     f_xx = sp.diff(f, x, x)
     neg_laplace = f_xx # adjust as per symbols, may have several variables 
-    return -1*neg_laplace
-
+    return -1 * neg_laplace
 
 def generate_data(num_fns):
     Parser = utils.parser.Parser()
@@ -215,23 +210,23 @@ def generate_data(num_fns):
     for i in range(num_fns):
         actions = []
         for j in range(0, len(structure_choice)):
-            actions.append(torch.LongTensor([torch.randint(0,structure_choice[j],(1,1))]))
-        computational_tree = get_function(actions)        
+            actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
+        computational_tree = get_function(actions)
         functions.append((computational_tree))
-    logger = Logger('functions_log.txt', title = "dataset")
-    # logger.set_names(["Fn_Number", "raw function", "simplified_function", "negative_laplacian", "NEG_LAP_LIST"])
-    logger.set_names(["Fn_Number", "Soln_Operators", "F_Operators"])
-
-    print(len(functions))
+    
+    data = []
     for idx, fun in enumerate(functions):
         f = sp_function(fun)
-        print(f)
         neg_lap_f = negative_laplacian(f)
-        fun_string = print_fmla(fun)
-        logger.append(['Idx:' + str(idx) + '\n', 'Solution Operators: ' + str(Parser.get_postfix_from_str(str(f))) + "\n", "F Operators: " + str(Parser.get_postfix_from_str(str(neg_lap_f)))])
-        # logger.append(['Idx:' + str(idx) + '\n', 'Raw Function: ' + fun_string + '\n', 'Function: ' + str(f) + '\n', 'Negative Laplacian: ' + str(neg_lap_f) + "\n", "NEG_LAP_LIST: " + str(Parser.get_postfix_from_str(str(neg_lap_f)))])
+        soln_operators = Parser.get_postfix_from_str(str(f))
+        f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
+        data.append({"F_Operators": f_operators, "Solution_Operators": soln_operators})
     
+    with open('dataset.jsonl', 'w') as outfile:
+        for entry in data:
+            json.dump(entry, outfile)
+            outfile.write('\n')
 
 if __name__ == '__main__':
-    generate_data(100)
+    generate_data(args.num)
     print("main")
