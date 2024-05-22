@@ -9,6 +9,7 @@ import torch.nn as nn
 import numpy as np
 import sympy as sp
 from utils.logger import Logger
+import utils.parser 
 
 x, y = sp.symbols('x y')  # Define symbols used in your functions
 
@@ -209,25 +210,28 @@ def negative_laplacian(f):
 
 
 def generate_data(num_fns):
+    Parser = utils.parser.Parser()
     functions = []
     for i in range(num_fns):
         actions = []
         for j in range(0, len(structure_choice)):
             actions.append(torch.LongTensor([torch.randint(0,structure_choice[j],(1,1))]))
-        computational_tree = get_function(actions)
-        functions.append(computational_tree)
-
+        computational_tree = get_function(actions)        
+        functions.append((computational_tree))
     logger = Logger('functions_log.txt', title = "dataset")
-    logger.set_names(["Fn_Number", "raw function", "simplified_function", "negative_laplacian"])
-    
+    # logger.set_names(["Fn_Number", "raw function", "simplified_function", "negative_laplacian", "NEG_LAP_LIST"])
+    logger.set_names(["Fn_Number", "Soln_Operators", "F_Operators"])
+
+    print(len(functions))
     for idx, fun in enumerate(functions):
         f = sp_function(fun)
         print(f)
         neg_lap_f = negative_laplacian(f)
         fun_string = print_fmla(fun)
-        logger.append(['Idx:' + str(idx) + '\n', 'Raw Function: ' + fun_string + '\n', 'Function: ' + str(f) + '\n', 'Negative Laplacian: ' + str(neg_lap_f)])
+        logger.append(['Idx:' + str(idx) + '\n', 'Solution Operators: ' + str(Parser.get_postfix_from_str(str(f))) + "\n", "F Operators: " + str(Parser.get_postfix_from_str(str(neg_lap_f)))])
+        # logger.append(['Idx:' + str(idx) + '\n', 'Raw Function: ' + fun_string + '\n', 'Function: ' + str(f) + '\n', 'Negative Laplacian: ' + str(neg_lap_f) + "\n", "NEG_LAP_LIST: " + str(Parser.get_postfix_from_str(str(neg_lap_f)))])
     
 
 if __name__ == '__main__':
-    generate_data(25)
+    generate_data(100)
     print("main")

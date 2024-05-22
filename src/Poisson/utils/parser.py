@@ -73,7 +73,7 @@ class Parser(object):
         operator_list = function_str.split(',')
         operator_list = [operator.replace(' ', '') for operator in operator_list]
         operator_list = [operator for operator in operator_list if operator != '']
-        # neg_const = re.compile(r'(-\d+)')
+        neg_const = re.compile(r'(-\d+)')
         # pos_const = re.compile(r'(\d+)')
         # operator_list = ['n_const' if neg_const.match(operator) else 'p_const' if pos_const.match(operator) else operator for operator in operator_list]
         for idx, token in enumerate(operator_list): 
@@ -120,7 +120,62 @@ class Parser(object):
         return self.wrap_operators(operator_list)
 
     # generate postfix list, given infix list 
-    def make_postfix(self, infix_list): 
+    # def make_postfix(self, infix_list): 
+    #     class Stack:
+    #         def __init__(self):
+    #             self.items = []
+
+    #         def is_empty(self):
+    #             return len(self.items) == 0
+
+    #         def push(self, item):
+    #             self.items.append(item)
+
+    #         def pop(self):
+    #             if not self.is_empty():
+    #                 return self.items.pop()
+    #             else:
+    #                 raise IndexError("pop from an empty stack")
+
+    #         def peek(self):
+    #             if not self.is_empty():
+    #                 return self.items[-1]
+    #             else:
+    #                 raise IndexError("peek from an empty stack")
+            
+    #         def print(self): 
+    #             print("stack: ")
+    #             for el in self.items: 
+    #                 print(el + ',', end='')
+
+    #         def size(self):
+    #             return len(self.items)         
+    #     operator_list = [] 
+    #     stack = Stack()
+    #     for idx, token in enumerate(infix_list):
+    #         if token == '(':
+    #             stack.push(token)
+    #         elif token == ')':
+    #             while stack.peek() != '(': 
+    #                 operator_list.append(stack.pop())
+    #             stack.pop()
+    #         elif token in operators.keys(): 
+    #             try: 
+    #                 # remove operators with higher or equal precendence from stack 
+    #                 while stack.peek() in operators and float(operators[stack.peek()]) >= float(operators[token]):
+    #                     operator_list.append(stack.pop())
+    #                 stack.push(token)
+    #             except IndexError: 
+    #                 stack.push(token)
+    #         else: 
+    #             # if operand, append to list 
+    #             operator_list.append(token) 
+    #         if idx == len(infix_list) - 1:
+    #             while not stack.is_empty():
+    #                 operator_list.append(stack.pop())
+    #     return operator_list
+    
+    def make_postfix(self, infix_list):
         class Stack:
             def __init__(self):
                 self.items = []
@@ -134,46 +189,48 @@ class Parser(object):
             def pop(self):
                 if not self.is_empty():
                     return self.items.pop()
-                else:
-                    raise IndexError("pop from an empty stack")
+                return None  # Return None if stack is empty
 
             def peek(self):
                 if not self.is_empty():
                     return self.items[-1]
-                else:
-                    raise IndexError("peek from an empty stack")
+                return None  # Return None if stack is empty
             
-            def print(self): 
+            def print(self):
                 print("stack: ")
-                for el in self.items: 
+                for el in self.items:
                     print(el + ',', end='')
 
             def size(self):
-                return len(self.items)         
-        operator_list = [] 
+                return len(self.items)
+        
+        operators = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}  # Example operator precedence
+        operator_list = []
         stack = Stack()
+        
         for idx, token in enumerate(infix_list):
             if token == '(':
                 stack.push(token)
             elif token == ')':
-                while stack.peek() != '(': 
+                while stack.peek() is not None and stack.peek() != '(':
                     operator_list.append(stack.pop())
-                stack.pop()
-            elif token in operators.keys(): 
-                try: 
-                    # remove operators with higher or equal precendence from stack 
-                    while stack.peek() in operators and float(operators[stack.peek()]) >= float(operators[token]):
-                        operator_list.append(stack.pop())
-                    stack.push(token)
-                except IndexError: 
-                    stack.push(token)
-            else: 
-                # if operand, append to list 
-                operator_list.append(token) 
+                stack.pop()  # Remove '(' from stack
+            elif token in operators.keys():
+                while stack.peek() is not None and stack.peek() in operators and operators[stack.peek()] >= operators[token]:
+                    operator_list.append(stack.pop())
+                stack.push(token)
+            else:
+                operator_list.append(token)
+            
             if idx == len(infix_list) - 1:
                 while not stack.is_empty():
                     operator_list.append(stack.pop())
+        
         return operator_list
+
+    def get_postfix_from_str(self, function_str): 
+        infix_list = self.make_infix(function_str)
+        return self.make_postfix(infix_list)
             
 if __name__ == '__main__':
     parser = Parser()
