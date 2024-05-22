@@ -218,7 +218,6 @@ def generate_data(num_fns):
     for idx, fun in enumerate(functions):
         f = sp_function(fun)
         neg_lap_f = negative_laplacian(f)
-        print(idx, 'function', f, 'solution', neg_lap_f)
         soln_operators = Parser.get_postfix_from_str(str(f))
         f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
         data.append({"F_Operators": f_operators, "Solution_Operators": soln_operators})
@@ -229,5 +228,5 @@ def generate_data(num_fns):
             outfile.write('\n')
 
 if __name__ == '__main__':
-    generate_data(10)
+    generate_data(args.num)
     print("main")
