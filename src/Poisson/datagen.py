@@ -198,7 +198,7 @@ def get_function(actions):
     inorder(computation_tree, actions)
     count = 0
     return computation_tree
-
+ 
 def negative_laplacian(f):
     f_xx = sp.diff(f, x, x)
     neg_laplace = f_xx # adjust as per symbols, may have several variables 
