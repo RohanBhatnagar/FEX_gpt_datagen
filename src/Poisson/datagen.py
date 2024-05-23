@@ -14,7 +14,7 @@ x, y = sp.symbols('x y')  # Define symbols used in your functions
 
 parser = argparse.ArgumentParser(description='NAS')
 
-parser.add_argument('--tree', default='depth2', type=str)
+parser.add_argument('--tree', default='depth3', type=str)
 parser.add_argument('--num', default=100, type=int)
 
 args = parser.parse_args()
@@ -215,12 +215,17 @@ def generate_data(num_fns):
         functions.append((computational_tree))
     
     data = []
+    seen_entries = set()
     for idx, fun in enumerate(functions):
         f = sp_function(fun)
         neg_lap_f = negative_laplacian(f)
         soln_operators = Parser.get_postfix_from_str(str(f))
         f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
-        data.append({"F_Operators": f_operators, "Solution_Operators": soln_operators})
+        entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators}
+        entry_tuple = (tuple(f_operators), tuple(soln_operators))  # Convert to tuple for hashing
+        if entry_tuple not in seen_entries:
+            seen_entries.add(entry_tuple)
+            data.append(entry)
     
     with open('dataset.jsonl', 'w') as outfile:
         for entry in data:
