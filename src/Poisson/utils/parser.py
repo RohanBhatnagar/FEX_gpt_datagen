@@ -72,7 +72,7 @@ class Parser(object):
         operator_list = [operator.replace(' ', '') for operator in operator_list]
         operator_list = [operator for operator in operator_list if operator != '']
 
-        # # Replace numbers with 'const' token
+        # Replace numbers with 'const' token
         const_pattern = re.compile(r'^-?\d+(\.\d+)?$')  # Matches integers and decimals, negative or positive
         operator_list = ['const' if const_pattern.match(token) else token for token in operator_list]
 
