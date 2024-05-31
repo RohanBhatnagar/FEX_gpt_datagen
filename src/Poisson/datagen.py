@@ -1,7 +1,7 @@
 import random
 import json
 import torch
-import function as func
+from function import Functions
 import argparse
 from computational_tree import BinaryTree
 import torch.nn as nn
@@ -16,14 +16,19 @@ parser = argparse.ArgumentParser(description='NAS')
 
 parser.add_argument('--tree', default='depth3', type=str)
 parser.add_argument('--num', default=100, type=int)
+parser.add_argument('--dim', default=2, type=int)
 
 args = parser.parse_args()
 
-unary = func.unary_functions
-binary = func.binary_functions
-unary_functions_str = func.unary_functions_str
-unary_functions_str_leaf = func.unary_functions_str_leaf
-binary_functions_str = func.binary_functions_str
+func = Functions(args.dim)
+
+unary = func.get_unary_functions()
+binary = func.get_binary_functions()
+unary_functions_str = func.get_unary_functions_str()
+unary_functions_str_leaf = func.get_unary_functions_str_leaf()
+binary_functions_str = func.get_binary_functions_str()
+
+# move all this to another class
 
 if args.tree == 'depth2':
     def basic_tree():
@@ -158,10 +163,12 @@ def inorder(tree, actions):
         if tree.is_unary:
             action = action
             tree.key = unary[action]
+            # print('adding', unary[action])
             tree.action = action
         else:
             action = action
             tree.key = binary[action]
+            # print('adding', binary[action])
             tree.action = action
         count = count + 1
         inorder(tree.rightChild, actions)
@@ -218,20 +225,21 @@ def generate_data(num_fns):
     seen_entries = set()
     for idx, fun in enumerate(functions):
         f = sp_function(fun)
+        # print("FUNCTION", str(f))
         neg_lap_f = negative_laplacian(f)
         soln_operators = Parser.get_postfix_from_str(str(f))
         f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
-        print(f, neg_lap_f)
+        # print(f, neg_lap_f)
         entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators}
         entry_tuple = (tuple(f_operators), tuple(soln_operators))  # Convert to tuple for hashing
         if entry_tuple not in seen_entries:
             seen_entries.add(entry_tuple)
             data.append(entry)
     
-    with open('dataset.jsonl', 'w') as outfile:
-        for entry in data:
-            json.dump(entry, outfile)
-            outfile.write('\n')
+    # with open('dataset.jsonl', 'w') as outfile:
+    #     for entry in data:
+    #         json.dump(entry, outfile)
+    #         outfile.write('\n')
 
 if __name__ == '__main__':
     generate_data(args.num)
