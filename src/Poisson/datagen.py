@@ -17,6 +17,8 @@ parser = argparse.ArgumentParser(description='NAS')
 parser.add_argument('--tree', default='depth3', type=str)
 parser.add_argument('--num', default=100, type=int)
 parser.add_argument('--dim', default=2, type=int)
+parser.add_argument('--condition', default='Dirichlet', type=str)
+# domain is assumed to be a [0,1] square, cube, etc. 
 
 args = parser.parse_args()
 
@@ -24,11 +26,8 @@ func = Functions(args.dim)
 
 unary = func.get_unary_functions()
 binary = func.get_binary_functions()
-unary_functions_str = func.get_unary_functions_str()
-unary_functions_str_leaf = func.get_unary_functions_str_leaf()
-binary_functions_str = func.get_binary_functions_str()
 
-# move all this to another class
+# move all tree construction to another class
 
 if args.tree == 'depth2':
     def basic_tree():
@@ -178,7 +177,7 @@ def sp_function(tree):
     if tree is None:
         return None
     elif tree.rightChild is None and tree.leftChild is None:
-        return tree.key(x, 2)
+        return tree.key(tree.key.args[0][0], 2)
     elif tree.rightChild is None: 
         return tree.key(sp_function(tree.leftChild), 2) #random number for 5
     else: 
@@ -206,10 +205,9 @@ def get_function(actions):
     count = 0
     return computation_tree
  
-def negative_laplacian(f):
-    f_xx = sp.diff(f, x, x)
-    neg_laplace = f_xx # adjust as per symbols, may have several variables 
-    return -1 * neg_laplace
+def negative_laplacian(f, symbols):
+    laplacian = sum(sp.diff(f, var, var) for var in symbols)
+    return -1 * laplacian
 
 def generate_data(num_fns):
     Parser = utils.parser.Parser()
@@ -225,11 +223,11 @@ def generate_data(num_fns):
     seen_entries = set()
     for idx, fun in enumerate(functions):
         f = sp_function(fun)
-        # print("FUNCTION", str(f))
-        neg_lap_f = negative_laplacian(f)
+        neg_lap_f = negative_laplacian(f, func.get_symbols())
         soln_operators = Parser.get_postfix_from_str(str(f))
         f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
-        # print(f, neg_lap_f)
+        # print('function', f, '\nnegative laplace', neg_lap_f, '\n')
+        # print('f list', soln_operators, '\nlaplace list', f_operators, '\n')
         entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators}
         entry_tuple = (tuple(f_operators), tuple(soln_operators))  # Convert to tuple for hashing
         if entry_tuple not in seen_entries:
