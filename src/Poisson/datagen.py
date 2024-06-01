@@ -17,8 +17,9 @@ parser = argparse.ArgumentParser(description='NAS')
 parser.add_argument('--tree', default='depth3', type=str)
 parser.add_argument('--num', default=100, type=int)
 parser.add_argument('--dim', default=2, type=int)
-parser.add_argument('--condition', default='Dirichlet', type=str)
+parser.add_argument('--bc', default='D', type=str)
 # domain is assumed to be a [0,1] square, cube, etc. 
+boundary = [0, 1]
 
 args = parser.parse_args()
 
@@ -211,7 +212,13 @@ def negative_laplacian(f):
     return -1 * laplacian
 
 def calculate_dirichlet(f):
-    return 0
+    bc = {}
+    # boundary defined above
+    for symbol in symbols: 
+        for bound in boundary: 
+            subs = {sym: bound if sym == symbol else sp.Symbol(sym.name) for sym in symbols}
+            bc[f'{symbol}={bound}'] = f.subs(subs)
+    return bc
 
 def calculate_neumann(f):
     return 0
@@ -239,14 +246,15 @@ def generate_data(num_fns):
         # print('f list', soln_operators, '\nlaplace list', f_operators, '\n')
 
         # calculate boundary condition
-        condition_type = args.condition
+        condition_type = args.bc
         if condition_type == 'D':
-            bc = calculate_dirichlet()
+            bc = calculate_dirichlet(neg_lap_f)
         elif condition_type == 'N':
-            bc = calculate_neumann()
+            bc = calculate_neumann(neg_lap_f)
         elif condition_type == 'C':
-            bc = calculate_cauchy()
+            bc = calculate_cauchy(neg_lap_f)
         print(bc)
+        
         entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators}
         entry_tuple = (tuple(f_operators), tuple(soln_operators))  # Convert to tuple for hashing
         if entry_tuple not in seen_entries:
