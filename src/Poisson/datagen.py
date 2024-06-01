@@ -26,6 +26,7 @@ func = Functions(args.dim)
 
 unary = func.get_unary_functions()
 binary = func.get_binary_functions()
+symbols = func.get_symbols()
 
 # move all tree construction to another class
 
@@ -205,9 +206,18 @@ def get_function(actions):
     count = 0
     return computation_tree
  
-def negative_laplacian(f, symbols):
+def negative_laplacian(f):
     laplacian = sum(sp.diff(f, var, var) for var in symbols)
     return -1 * laplacian
+
+def calculate_dirichlet(f):
+    return 0
+
+def calculate_neumann(f):
+    return 0
+
+def calculate_cauchy(f):
+    return 0
 
 def generate_data(num_fns):
     Parser = utils.parser.Parser()
@@ -218,16 +228,25 @@ def generate_data(num_fns):
             actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
         computational_tree = get_function(actions)
         functions.append((computational_tree))
-    
     data = []
     seen_entries = set()
     for idx, fun in enumerate(functions):
         f = sp_function(fun)
-        neg_lap_f = negative_laplacian(f, func.get_symbols())
+        neg_lap_f = negative_laplacian(f)
         soln_operators = Parser.get_postfix_from_str(str(f))
         f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
         # print('function', f, '\nnegative laplace', neg_lap_f, '\n')
         # print('f list', soln_operators, '\nlaplace list', f_operators, '\n')
+
+        # calculate boundary condition
+        condition_type = args.condition
+        if condition_type == 'D':
+            bc = calculate_dirichlet()
+        elif condition_type == 'N':
+            bc = calculate_neumann()
+        elif condition_type == 'C':
+            bc = calculate_cauchy()
+        print(bc)
         entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators}
         entry_tuple = (tuple(f_operators), tuple(soln_operators))  # Convert to tuple for hashing
         if entry_tuple not in seen_entries:
