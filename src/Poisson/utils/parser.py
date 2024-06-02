@@ -5,7 +5,7 @@ tokens = [
     '(',
     ')',
     'const',
-    'X',
+    r'\x\d+',
     r'\^\d+',
     'SIN',
     'COS',
@@ -55,7 +55,7 @@ class Parser(object):
         function_str = re.sub(r'exp', ',EXP,', function_str)
         function_str = re.sub(r'sin', ',SIN,', function_str)
         function_str = re.sub(r'cos', ',COS,', function_str)
-        function_str = re.sub(r'x', ',X,', function_str)
+        function_str = re.sub(r'x(\d+)', r',x\1,', function_str)
         function_str = re.sub(r'\*', ',*,', function_str)
         function_str = re.sub(r'\+', ',+,', function_str)
         function_str = function_str.replace(' - ', 'MINUS')
@@ -71,6 +71,7 @@ class Parser(object):
         # Replace numbers with 'const' token
         const_pattern = re.compile(r'^-?\d+(\.\d+)?$')  # Matches integers and decimals, negative or positive
         operator_list = ['const' if const_pattern.match(token) else token for token in operator_list]
+        # print("operator list", operator_list)
 
         return self.wrap_operators(operator_list)
 

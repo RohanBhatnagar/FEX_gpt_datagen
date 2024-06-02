@@ -1,13 +1,14 @@
 import numpy as np
-import function as func
-unary = func.unary_functions
-binary = func.binary_functions
-unary_functions_str = func.unary_functions_str
-binary_functions_str = func.binary_functions_str
+from function import Functions
 import sympy as sp
 
-x, y= sp.symbols('x y')  # Define symbols used in your functions
+func = Functions(3)
 
+symbols = func.get_symbols()
+unary = func.get_unary_functions()
+binary = func.get_binary_functions()
+unary_functions_str = func.get_unary_functions_str()
+binary_functions_str = func.get_binary_functions_str()
 
 class BinaryTree(object):
     def __init__(self,item,is_unary=True):
@@ -82,7 +83,7 @@ def get_function(actions):
     count = 0
     computation_tree = basic_tree()
     inorder(computation_tree, actions)
-    count = 0 # 置零
+    count = 0
     return computation_tree
 
 def inorder_test(tree, actions):
@@ -145,10 +146,10 @@ if __name__ =='__main__':
     # count = 0
     # tr = basic_tree()
     # inorder_test(tr, actions)
-    f = binary[0](unary[2](x, 5), unary[4](x, 90))
-    print(f)
-    df = sp.diff(f, x)
-    print(df)
+    # f = binary[0](unary[2](x, 5), unary[4](x, 90))
+    # print(f)
+    # df = sp.diff(f, x)
+    # print(df)
 
     count = 0
 
