@@ -15,7 +15,7 @@ x, y = sp.symbols('x y')  # Define symbols used in your functions
 parser = argparse.ArgumentParser(description='NAS')
 
 parser.add_argument('--tree', default='depth3', type=str)
-parser.add_argument('--num', default=100, type=int)
+parser.add_argument('--num', default=5, type=int)
 parser.add_argument('--dim', default=2, type=int)
 parser.add_argument('--bc', default='D', type=str)
 # domain is assumed to be a [0,1] square, cube, etc. 
@@ -214,17 +214,26 @@ def negative_laplacian(f):
 def calculate_dirichlet(f):
     bc = {}
     # boundary defined above
-    for symbol in symbols: 
-        for bound in boundary: 
+    for symbol in symbols:
+        for bound in boundary:
             subs = {sym: bound if sym == symbol else sp.Symbol(sym.name) for sym in symbols}
             bc[f'{symbol}={bound}'] = f.subs(subs)
     return bc
 
 def calculate_neumann(f):
-    return 0
+    bc = {}
+    for symbol in symbols:
+        for bound in boundary:
+            normal_derivative = sp.diff(f, symbol)
+            subs = {sym: bound if sym == symbol else sp.Symbol(sym.name) for sym in symbols}
+            bc[f'{symbol}={bound}'] = normal_derivative.subs(subs)
+    return bc
 
 def calculate_cauchy(f):
-    return 0
+    dirichlet_bc = calculate_dirichlet(f)
+    neumann_bc = calculate_neumann(f)
+    cauchy_bc = {key: (("Dirichlet: " + str(dirichlet_bc[key])), "Neumann: " + str(neumann_bc[key])) for key in dirichlet_bc}
+    return cauchy_bc
 
 def generate_data(num_fns):
     Parser = utils.parser.Parser()
@@ -253,8 +262,11 @@ def generate_data(num_fns):
             bc = calculate_neumann(neg_lap_f)
         elif condition_type == 'C':
             bc = calculate_cauchy(neg_lap_f)
-        print(bc)
-        
+            
+        print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
+        print("BOUNDARY: ", bc)
+        print()
+        print()
         entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators}
         entry_tuple = (tuple(f_operators), tuple(soln_operators))  # Convert to tuple for hashing
         if entry_tuple not in seen_entries:
