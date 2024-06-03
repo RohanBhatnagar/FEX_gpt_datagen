@@ -30,7 +30,6 @@ binary = func.get_binary_functions()
 symbols = func.get_symbols()
 
 # move all tree construction to another class
-
 if args.tree == 'depth2':
     def basic_tree():
         tree = BinaryTree('', False)
@@ -224,16 +223,16 @@ def calculate_neumann(f):
     bc = {}
     for symbol in symbols:
         for bound in boundary:
-            normal_derivative = sp.diff(f, symbol)
+            derivative = sp.diff(f, symbol)
             subs = {sym: bound if sym == symbol else sp.Symbol(sym.name) for sym in symbols}
-            bc[f'{symbol}={bound}'] = normal_derivative.subs(subs)
+            bc[f'{symbol}={bound}'] = derivative.subs(subs)
     return bc
 
 def calculate_cauchy(f):
     dirichlet_bc = calculate_dirichlet(f)
     neumann_bc = calculate_neumann(f)
-    cauchy_bc = {key: (("Dirichlet: " + str(dirichlet_bc[key])), "Neumann: " + str(neumann_bc[key])) for key in dirichlet_bc}
-    return cauchy_bc
+    bc = {key: (("Dirichlet: " + str(dirichlet_bc[key])), "Neumann: " + str(neumann_bc[key])) for key in dirichlet_bc}
+    return bc
 
 def generate_data(num_fns):
     Parser = utils.parser.Parser()
@@ -251,8 +250,6 @@ def generate_data(num_fns):
         neg_lap_f = negative_laplacian(f)
         soln_operators = Parser.get_postfix_from_str(str(f))
         f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
-        # print('function', f, '\nnegative laplace', neg_lap_f, '\n')
-        # print('f list', soln_operators, '\nlaplace list', f_operators, '\n')
 
         # calculate boundary condition
         condition_type = args.bc
@@ -268,7 +265,7 @@ def generate_data(num_fns):
         print()
         print()
         entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators}
-        entry_tuple = (tuple(f_operators), tuple(soln_operators))  # Convert to tuple for hashing
+        entry_tuple = (tuple(f_operators), tuple(soln_operators))  
         if entry_tuple not in seen_entries:
             seen_entries.add(entry_tuple)
             data.append(entry)
