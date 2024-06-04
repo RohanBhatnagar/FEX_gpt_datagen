@@ -11,6 +11,7 @@ class Functions:
     
     def _generate_functions(self):
         self.symbols = sp.symbols(f'x:{self.dimension}')
+        E = sp.symbols('E')
         print(self.symbols)
         c1 = sp.symbols('c1')
         

@@ -10,8 +10,6 @@ import sympy as sp
 from utils.logger import Logger
 import utils.parser
 
-x, y = sp.symbols('x y')  # Define symbols used in your functions
-
 parser = argparse.ArgumentParser(description='NAS')
 
 parser.add_argument('--tree', default='depth3', type=str)
@@ -211,12 +209,14 @@ def negative_laplacian(f):
     return -1 * laplacian
 
 def calculate_dirichlet(f):
+    E = sp.symbols('E')
     bc = {}
     # boundary defined above
     for symbol in symbols:
         for bound in boundary:
             subs = {sym: bound if sym == symbol else sp.Symbol(sym.name) for sym in symbols}
-            bc[f'{symbol}={bound}'] = f.subs(subs)
+            f = f.subs(E, 1)
+            bc[f'{symbol}={bound}'] = simplify_constants(f.subs(subs))
     return bc
 
 def calculate_neumann(f):
@@ -225,14 +225,25 @@ def calculate_neumann(f):
         for bound in boundary:
             derivative = sp.diff(f, symbol)
             subs = {sym: bound if sym == symbol else sp.Symbol(sym.name) for sym in symbols}
-            bc[f'{symbol}={bound}'] = derivative.subs(subs)
+            bc[f'{symbol}={bound}'] = simplify_constants(derivative.subs(subs))
     return bc
 
 def calculate_cauchy(f):
     dirichlet_bc = calculate_dirichlet(f)
     neumann_bc = calculate_neumann(f)
-    bc = {key: (("Dirichlet: " + str(dirichlet_bc[key])), "Neumann: " + str(neumann_bc[key])) for key in dirichlet_bc}
+    # bc = {key: (("Dirichlet: " + str(dirichlet_bc[key])), "Neumann: " + str(neumann_bc[key])) for key in dirichlet_bc}
+    bc = {key: (str(dirichlet_bc[key]), str(neumann_bc[key])) for key in dirichlet_bc}
     return bc
+
+def simplify_constants(expr):
+    def truncate(val):
+        return round(val)
+    expr = expr.subs(sp.E, truncate(sp.N(sp.E)))
+    expr = expr.subs(sp.pi, truncate(sp.N(sp.pi)))
+    expr = expr.subs(sp.sin(1), truncate(sp.N(sp.sin(1))))
+    expr = expr.subs(sp.cos(1), truncate(sp.N(sp.cos(1))))
+
+    return expr
 
 def generate_data(num_fns):
     Parser = utils.parser.Parser()
@@ -259,9 +270,17 @@ def generate_data(num_fns):
             bc = calculate_neumann(neg_lap_f)
         elif condition_type == 'C':
             bc = calculate_cauchy(neg_lap_f)
-            
+
+        # dict of tokenized boundary conditions
+        tokenized_bc = {}
+        for key, condition in bc.items(): 
+            tokenized_condition = Parser.get_postfix_from_str(str(condition))
+            tokenized_bc[key] = tokenized_condition
+
         print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
-        print("BOUNDARY: ", bc)
+        print("tokenized bc: ")
+        for key, condition in tokenized_bc.items():
+            print(key, ':', condition)
         print()
         print()
         entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators}
