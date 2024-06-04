@@ -1,5 +1,3 @@
-import random
-import json
 import torch
 from function import Functions
 import argparse
@@ -27,7 +25,6 @@ unary = func.get_unary_functions()
 binary = func.get_binary_functions()
 symbols = func.get_symbols()
 
-# move all tree construction to another class
 if args.tree == 'depth2':
     def basic_tree():
         tree = BinaryTree('', False)
