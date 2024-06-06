@@ -2,7 +2,6 @@ import torch
 from function import Functions
 import argparse
 from computational_tree import BinaryTree
-import torch.nn as nn
 import numpy as np
 import sympy as sp
 from utils.logger import Logger
@@ -13,7 +12,8 @@ parser = argparse.ArgumentParser(description='NAS')
 parser.add_argument('--tree', default='depth3', type=str)
 parser.add_argument('--num', default=5, type=int)
 parser.add_argument('--dim', default=2, type=int)
-parser.add_argument('--bc', default='D', type=str)
+parser.add_argument('--bc', default='Dirichlet', type=str)
+parser.add_argument('--function', default='Poisson', type=str)
 # domain is assumed to be a [0,1] square, cube, etc. 
 boundary = [0, 1]
 
@@ -229,10 +229,11 @@ def calculate_cauchy(f):
     dirichlet_bc = calculate_dirichlet(f)
     neumann_bc = calculate_neumann(f)
     # bc = {key: (("Dirichlet: " + str(dirichlet_bc[key])), "Neumann: " + str(neumann_bc[key])) for key in dirichlet_bc}
-    bc = {key: (str(dirichlet_bc[key]), str(neumann_bc[key])) for key in dirichlet_bc}
+    bc = {key: (str(dirichlet_bc[key]), str(neumann_bc[key])) for key in dirichlet_bc} # add labels for LLM input
     return bc
 
 def simplify_constants(expr):
+    # round to prepare for parser
     def truncate(val):
         return round(val)
     expr = expr.subs(sp.E, truncate(sp.N(sp.E)))
@@ -261,11 +262,11 @@ def generate_data(num_fns):
 
         # calculate boundary condition
         condition_type = args.bc
-        if condition_type == 'D':
+        if condition_type == 'Dirichlet':
             bc = calculate_dirichlet(neg_lap_f)
-        elif condition_type == 'N':
+        elif condition_type == 'Neumann':
             bc = calculate_neumann(neg_lap_f)
-        elif condition_type == 'C':
+        elif condition_type == 'Cauchy':
             bc = calculate_cauchy(neg_lap_f)
 
         # dict of tokenized boundary conditions
@@ -275,14 +276,13 @@ def generate_data(num_fns):
             tokenized_bc[key] = tokenized_condition
 
         print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
-        print("tokenized bc: ")
-        for key, condition in tokenized_bc.items():
-            print(key, ':', condition)
+        print("tokenized bc: ", tokenized_bc)
         print()
         print()
-        entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators}
-        entry_tuple = (tuple(f_operators), tuple(soln_operators))  
+        entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators, args.bc: tokenized_bc }
+        entry_tuple = ((args.function,) + tuple(f_operators), tuple(soln_operators), (args.bc,) + tuple(tokenized_bc))  
         if entry_tuple not in seen_entries:
+            print(entry_tuple)
             seen_entries.add(entry_tuple)
             data.append(entry)
     
