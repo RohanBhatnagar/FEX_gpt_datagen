@@ -243,25 +243,24 @@ def simplify_constants(expr):
 
     return expr
 
-def generate_data(num_fns):
+def generate_data(num):
     Parser = utils.parser.Parser()
-    functions = []
-    for i in range(num_fns):
+    data = []
+    condition_type = args.bc
+
+    # generate unique data until desired size is met 
+    while len(data) <= num:
         actions = []
         for j in range(0, len(structure_choice)):
             actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
         computational_tree = get_function(actions)
-        functions.append((computational_tree))
-    data = []
-    seen_entries = set()
-    for idx, fun in enumerate(functions):
-        f = sp_function(fun)
+
+        f = sp_function(computational_tree)
         neg_lap_f = negative_laplacian(f)
+
         soln_operators = Parser.get_postfix_from_str(str(f))
         f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
 
-        # calculate boundary condition
-        condition_type = args.bc
         if condition_type == 'Dirichlet':
             bc = calculate_dirichlet(neg_lap_f)
         elif condition_type == 'Neumann':
@@ -269,7 +268,6 @@ def generate_data(num_fns):
         elif condition_type == 'Cauchy':
             bc = calculate_cauchy(neg_lap_f)
 
-        # dict of tokenized boundary conditions
         tokenized_bc = {}
         for key, condition in bc.items(): 
             tokenized_condition = Parser.get_postfix_from_str(str(condition))
@@ -279,13 +277,13 @@ def generate_data(num_fns):
         print("tokenized bc: ", tokenized_bc)
         print()
         print()
-        entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators, args.bc: tokenized_bc }
-        entry_tuple = ((args.function,) + tuple(f_operators), tuple(soln_operators), (args.bc,) + tuple(tokenized_bc))  
-        if entry_tuple not in seen_entries:
-            print(entry_tuple)
-            seen_entries.add(entry_tuple)
-            data.append(entry)
-    
+        entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators, condition_type: tokenized_bc }
+        data.append(entry)
+
+    for idx, entry in enumerate(data):
+        print(idx, entry, end='\n\n') 
+    print(len(data))
+            
     # with open('dataset.jsonl', 'w') as outfile:
     #     for entry in data:
     #         json.dump(entry, outfile)
