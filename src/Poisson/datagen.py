@@ -275,12 +275,18 @@ def generate_data(num):
             tokenized_bc = [condition_type]
             for key, values in bc.items():
                 tokenized_bc.append(key)
-                tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
+                if condition_type == 'Cauchy': # tuple
+                    for value in values: 
+                        print(str(value))
+                        tokenized_bc.extend(Parser.get_postfix_from_str(str(value)))
+                else:
+                    tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
 
             # print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
             # print("tokenized bc: ", tokenized_bc)
-            entry = {"Function": ["Poisson"], "F_Operators": f_operators, "Solution_Operators": soln_operators, "Boundary": tokenized_bc }
+            entry = {"Input_Operators": ["Poisson"] + f_operators + tokenized_bc, "Solution_Operators": soln_operators }
             data.append(entry)
+            print(entry)
             if len(data) % 10 == 0:
                 print(len(data))
 
