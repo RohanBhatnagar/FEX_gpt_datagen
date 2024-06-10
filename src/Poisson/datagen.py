@@ -2,10 +2,10 @@ import torch
 from function import Functions
 import argparse
 from computational_tree import BinaryTree
-import numpy as np
 import sympy as sp
 from utils.logger import Logger
 import utils.parser
+import json
 
 parser = argparse.ArgumentParser(description='NAS')
 
@@ -16,6 +16,7 @@ parser.add_argument('--bc', default='Dirichlet', type=str)
 parser.add_argument('--function', default='Poisson', type=str)
 # domain is assumed to be a [0,1] square, cube, etc. 
 boundary = [0, 1]
+conditions = ['Dirichlet', 'Neumann', 'Cauchy']
 
 args = parser.parse_args()
 
@@ -246,10 +247,9 @@ def simplify_constants(expr):
 def generate_data(num):
     Parser = utils.parser.Parser()
     data = []
-    condition_type = args.bc
 
     # generate unique data until desired size is met 
-    while len(data) <= num:
+    while len(data) < num:
         actions = []
         for j in range(0, len(structure_choice)):
             actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
@@ -261,6 +261,7 @@ def generate_data(num):
         soln_operators = Parser.get_postfix_from_str(str(f))
         f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
 
+        condition_type = conditions[torch.randint(0, 3, (1,1))]
         if condition_type == 'Dirichlet':
             bc = calculate_dirichlet(neg_lap_f)
         elif condition_type == 'Neumann':
@@ -268,26 +269,23 @@ def generate_data(num):
         elif condition_type == 'Cauchy':
             bc = calculate_cauchy(neg_lap_f)
 
-        tokenized_bc = {}
-        for key, condition in bc.items(): 
-            tokenized_condition = Parser.get_postfix_from_str(str(condition))
-            tokenized_bc[key] = tokenized_condition
+        tokenized_bc = [condition_type]
+        for key, values in bc.items():
+            tokenized_bc.append(key)
+            tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
 
         print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
         print("tokenized bc: ", tokenized_bc)
-        print()
-        print()
-        entry = {"F_Operators": f_operators, "Solution_Operators": soln_operators, condition_type: tokenized_bc }
+        entry = {"Function": ["Poisson"], "F_Operators": f_operators, "Solution_Operators": soln_operators, "Boundary": tokenized_bc }
         data.append(entry)
 
-    for idx, entry in enumerate(data):
-        print(idx, entry, end='\n\n') 
-    print(len(data))
+    # for idx, entry in enumerate(data):
+        # print(idx, entry, end='\n\n') 
             
-    # with open('dataset.jsonl', 'w') as outfile:
-    #     for entry in data:
-    #         json.dump(entry, outfile)
-    #         outfile.write('\n')
+    with open('dataset.jsonl', 'w') as outfile:
+        for entry in data:
+            json.dump(entry, outfile)
+            outfile.write('\n')
 
 if __name__ == '__main__':
     generate_data(args.num)
