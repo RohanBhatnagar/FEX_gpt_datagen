@@ -277,8 +277,8 @@ def generate_data(num):
                 tokenized_bc.append(key)
                 tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
 
-            print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
-            print("tokenized bc: ", tokenized_bc)
+            # print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
+            # print("tokenized bc: ", tokenized_bc)
             entry = {"Function": ["Poisson"], "F_Operators": f_operators, "Solution_Operators": soln_operators, "Boundary": tokenized_bc }
             data.append(entry)
             if len(data) % 10 == 0:
