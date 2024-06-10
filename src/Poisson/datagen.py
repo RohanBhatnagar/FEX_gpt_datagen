@@ -280,7 +280,7 @@ def generate_data(num):
         data.append(entry)
         
         if len(data) % 100 == 0:
-            print(len(data))
+            print(len(data), "/", num, "data generated")
 
     # for idx, entry in enumerate(data):
         # print(idx, entry, end='\n\n') 
