@@ -248,39 +248,45 @@ def generate_data(num):
     Parser = utils.parser.Parser()
     data = []
 
+    
     # generate unique data until desired size is met 
     while len(data) < num:
-        actions = []
-        for j in range(0, len(structure_choice)):
-            actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
-        computational_tree = get_function(actions)
+        # constants are constants, ignore cases where they are too large
+        try: 
+            actions = []
+            for j in range(0, len(structure_choice)):
+                actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
+            computational_tree = get_function(actions)
 
-        f = sp_function(computational_tree)
-        neg_lap_f = negative_laplacian(f)
+            f = sp_function(computational_tree)
+            neg_lap_f = negative_laplacian(f)
 
-        soln_operators = Parser.get_postfix_from_str(str(f))
-        f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
+            soln_operators = Parser.get_postfix_from_str(str(f))
+            f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
 
-        condition_type = conditions[torch.randint(0, 3, (1,1))]
-        if condition_type == 'Dirichlet':
-            bc = calculate_dirichlet(neg_lap_f)
-        elif condition_type == 'Neumann':
-            bc = calculate_neumann(neg_lap_f)
-        elif condition_type == 'Cauchy':
-            bc = calculate_cauchy(neg_lap_f)
+            condition_type = conditions[torch.randint(0, 3, (1,1))]
+            if condition_type == 'Dirichlet':
+                bc = calculate_dirichlet(neg_lap_f)
+            elif condition_type == 'Neumann':
+                bc = calculate_neumann(neg_lap_f)
+            elif condition_type == 'Cauchy':
+                bc = calculate_cauchy(neg_lap_f)
 
-        tokenized_bc = [condition_type]
-        for key, values in bc.items():
-            tokenized_bc.append(key)
-            tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
+            tokenized_bc = [condition_type]
+            for key, values in bc.items():
+                tokenized_bc.append(key)
+                tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
 
-        print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
-        print("tokenized bc: ", tokenized_bc)
-        entry = {"Function": ["Poisson"], "F_Operators": f_operators, "Solution_Operators": soln_operators, "Boundary": tokenized_bc }
-        data.append(entry)
+            # print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
+            # print("tokenized bc: ", tokenized_bc)
+            entry = {"Function": ["Poisson"], "F_Operators": f_operators, "Solution_Operators": soln_operators, "Boundary": tokenized_bc }
+            data.append(entry)
+            if len(data) % 10 == 0:
+                print(len(data))
 
-    # for idx, entry in enumerate(data):
-        # print(idx, entry, end='\n\n') 
+        except ValueError as e:
+            print(f"Error during data generation: {e}")
+            continue
             
     with open('dataset.jsonl', 'w') as outfile:
         for entry in data:
