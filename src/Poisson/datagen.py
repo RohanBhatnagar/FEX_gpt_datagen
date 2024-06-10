@@ -10,8 +10,8 @@ import json
 parser = argparse.ArgumentParser(description='NAS')
 
 parser.add_argument('--tree', default='depth3', type=str)
-parser.add_argument('--num', default=5, type=int)
-parser.add_argument('--dim', default=2, type=int)
+parser.add_argument('--num', default=30000, type=int)
+parser.add_argument('--dim', default=5, type=int)
 parser.add_argument('--bc', default='Dirichlet', type=str)
 parser.add_argument('--function', default='Poisson', type=str)
 # domain is assumed to be a [0,1] square, cube, etc. 
@@ -274,10 +274,13 @@ def generate_data(num):
             tokenized_bc.append(key)
             tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
 
-        print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
-        print("tokenized bc: ", tokenized_bc)
+        # print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
+        # print("tokenized bc: ", tokenized_bc)
         entry = {"Function": ["Poisson"], "F_Operators": f_operators, "Solution_Operators": soln_operators, "Boundary": tokenized_bc }
         data.append(entry)
+        
+        if len(data) % 100 == 0:
+            print(len(data))
 
     # for idx, entry in enumerate(data):
         # print(idx, entry, end='\n\n') 
