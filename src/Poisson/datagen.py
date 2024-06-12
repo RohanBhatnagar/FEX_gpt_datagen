@@ -242,7 +242,7 @@ def simplify_constants(expr):
     expr = expr.subs(sp.sin(1), truncate(sp.N(sp.sin(1))))
     expr = expr.subs(sp.cos(1), truncate(sp.N(sp.cos(1))))
 
-    return expr
+    return expr.simplify()
 
 
 
@@ -260,8 +260,8 @@ def generate_data(num):
             actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
         computational_tree = get_function(actions)
 
-        f = sp_function(computational_tree)
-        neg_lap_f = negative_laplacian(f)
+        f = sp_function(computational_tree).simplify()
+        neg_lap_f = negative_laplacian(f).simplify()
 
         soln_operators = Parser.get_postfix_from_str(str(f))
         f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
@@ -287,7 +287,7 @@ def generate_data(num):
             seen_entries.add(entry_tuple)
             data.append(entry)
         
-        if len(data) % 100 == 0:
+        if len(data) % 10 == 0:
             print(len(data), "/", num, "data generated")
 
     # for idx, entry in enumerate(data):
