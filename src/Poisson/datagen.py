@@ -281,7 +281,7 @@ def generate_data(num):
 
         # print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
         # print("tokenized bc: ", tokenized_bc)
-        entry = {"Function": ["Poisson"], "F_Operators": f_operators, "Solution_Operators": soln_operators, "Boundary": tokenized_bc }
+        entry = {"Input_Operators": ["Poisson"] + f_operators + tokenized_bc, "Solution_Operators": soln_operators }
         entry_tuple = (tuple(f_operators), tuple(soln_operators), tuple(tokenized_bc))  # Convert to tuple for hashing
         if entry_tuple not in seen_entries:
             seen_entries.add(entry_tuple)
