@@ -244,9 +244,14 @@ def simplify_constants(expr):
 
     return expr
 
+
+
+
 def generate_data(num):
     Parser = utils.parser.Parser()
     data = []
+    seen_entries = set()
+
 
     # generate unique data until desired size is met 
     while len(data) < num:
@@ -277,7 +282,10 @@ def generate_data(num):
         # print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
         # print("tokenized bc: ", tokenized_bc)
         entry = {"Function": ["Poisson"], "F_Operators": f_operators, "Solution_Operators": soln_operators, "Boundary": tokenized_bc }
-        data.append(entry)
+        entry_tuple = (tuple(f_operators), tuple(soln_operators), tuple(tokenized_bc))  # Convert to tuple for hashing
+        if entry_tuple not in seen_entries:
+            seen_entries.add(entry_tuple)
+            data.append(entry)
         
         if len(data) % 100 == 0:
             print(len(data), "/", num, "data generated")
