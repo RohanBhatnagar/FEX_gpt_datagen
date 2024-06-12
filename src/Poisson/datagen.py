@@ -261,7 +261,7 @@ def generate_data(num):
         soln_operators = Parser.get_postfix_from_str(str(f))
         f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
 
-        condition_type = conditions[torch.randint(0, 3, (1,1))]
+        condition_type = conditions[torch.randint(0, 2, (1,1))] 
         if condition_type == 'Dirichlet':
             bc = calculate_dirichlet(neg_lap_f)
         elif condition_type == 'Neumann':
