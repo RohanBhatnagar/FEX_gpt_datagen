@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description='NAS')
 
 parser.add_argument('--tree', default='depth2', type=str)
 parser.add_argument('--num', default=100, type=int)
-parser.add_argument('--dim', default=2, type=int)
+parser.add_argument('--dim', default=3, type=int)
 parser.add_argument('--bc', default='Dirichlet', type=str)
 parser.add_argument('--function', default='Poisson', type=str)
 # domain is assumed to be a [0,1] square, cube, etc.
@@ -289,7 +289,7 @@ def generate_data(num):
                     longest_entry = entry
                     
                 if data_count % 10 == 0:
-                    print(data_count, "/", num, "data generated          max_len: ", max_len, " & Longest entry: ", max_len)
+                    print(data_count, "/", num, "data generated          max_len: ", max_len)
                     
     print("MAX LEN + ", max_len, " & Longest entry: ", longest_entry)
                 
