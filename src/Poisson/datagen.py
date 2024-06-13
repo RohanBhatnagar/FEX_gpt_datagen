@@ -251,8 +251,8 @@ def generate_data(num):
                 actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
             computational_tree = get_function(actions)
 
-            f = sp_function(computational_tree).simplify()
-            neg_lap_f = negative_laplacian(f).simplify()
+            f = sp_function(computational_tree)
+            neg_lap_f = negative_laplacian(f)
 
             soln_operators = Parser.get_postfix_from_str(str(f))
             f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
