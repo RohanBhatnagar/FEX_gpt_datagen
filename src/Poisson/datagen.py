@@ -242,6 +242,9 @@ def simplify_constants(expr):
 def generate_data(num):
     Parser = utils.parser.Parser()
     seen_entries = set()
+    
+    max_len = 0
+    longest_entry = None
 
     with open('dataset.jsonl', 'w') as outfile:
         data_count = 0
@@ -278,9 +281,18 @@ def generate_data(num):
                 json.dump(entry, outfile)
                 outfile.write('\n')
                 data_count += 1
-
+                
+                # Track the longest entry
+                entry_len = len(entry["Input_Operators"]) + len(entry["Solution_Operators"])
+                if entry_len > max_len:
+                    max_len = entry_len
+                    longest_entry = entry
+                    
                 if data_count % 10 == 0:
-                    print(data_count, "/", num, "data generated")
+                    print(data_count, "/", num, "data generated          max_len: ", max_len, " & Longest entry: ", max_len)
+                    
+    print("MAX LEN + ", max_len, " & Longest entry: ", longest_entry)
+                
 
 if __name__ == '__main__':
     generate_data(args.num)
