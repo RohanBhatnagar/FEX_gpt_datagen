@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description='NAS')
 
 parser.add_argument('--tree', default='depth2', type=str)
 parser.add_argument('--num', default=10000, type=int)
-parser.add_argument('--dim', default=3, type=int)
+parser.add_argument('--dim', default=2, type=int)
 parser.add_argument('--bc', default='Dirichlet', type=str)
 parser.add_argument('--function', default='Poisson', type=str)
 # domain is assumed to be a [0,1] square, cube, etc. 
@@ -159,12 +159,10 @@ def inorder(tree, actions):
         if tree.is_unary:
             action = action
             tree.key = unary[action]
-            # print('adding', unary[action])
             tree.action = action
         else:
             action = action
             tree.key = binary[action]
-            # print('adding', binary[action])
             tree.action = action
         count = count + 1
         inorder(tree.rightChild, actions)
@@ -229,7 +227,6 @@ def calculate_neumann(f):
 def calculate_cauchy(f):
     dirichlet_bc = calculate_dirichlet(f)
     neumann_bc = calculate_neumann(f)
-    # bc = {key: (("Dirichlet: " + str(dirichlet_bc[key])), "Neumann: " + str(neumann_bc[key])) for key in dirichlet_bc}
     bc = {key: (str(dirichlet_bc[key]), str(neumann_bc[key])) for key in dirichlet_bc} # add labels for LLM input
     return bc
 
@@ -242,62 +239,26 @@ def simplify_constants(expr):
     expr = expr.subs(sp.sin(1), truncate(sp.N(sp.sin(1))))
     expr = expr.subs(sp.cos(1), truncate(sp.N(sp.cos(1))))
 
-    return expr.simplify()
-
-
-
+    return expr
 
 def generate_data(num):
     Parser = utils.parser.Parser()
-    data = []
     seen_entries = set()
 
-
-    # generate unique data until desired size is met 
-    while len(data) < num:
-        actions = []
-        for j in range(0, len(structure_choice)):
-            actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
-        computational_tree = get_function(actions)
-
-        f = sp_function(computational_tree).simplify()
-        neg_lap_f = negative_laplacian(f).simplify()
-
-        soln_operators = Parser.get_postfix_from_str(str(f))
-        f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
-
-        condition_type = conditions[torch.randint(0, 2, (1,1))] 
-        if condition_type == 'Dirichlet':
-            bc = calculate_dirichlet(neg_lap_f)
-        elif condition_type == 'Neumann':
-            bc = calculate_neumann(neg_lap_f)
-        elif condition_type == 'Cauchy':
-            bc = calculate_cauchy(neg_lap_f)
-
-        tokenized_bc = [condition_type]
-        for key, values in bc.items():
-            tokenized_bc.append(key)
-            tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
-
-        # print('function:', f, '\nnegative laplace:', neg_lap_f, '\n')
-        # print("tokenized bc: ", tokenized_bc)
-        entry = {"Input_Operators": ["Poisson"] + f_operators + tokenized_bc, "Solution_Operators": soln_operators }
-        entry_tuple = (tuple(f_operators), tuple(soln_operators), tuple(tokenized_bc))  # Convert to tuple for hashing
-        if entry_tuple not in seen_entries:
-            seen_entries.add(entry_tuple)
-            data.append(entry)
-        
-        if len(data) % 10 == 0:
-            print(len(data), "/", num, "data generated")
-
-    # for idx, entry in enumerate(data):
-        # print(idx, entry, end='\n\n') 
-            
     with open('dataset.jsonl', 'w') as outfile:
-        for entry in data:
-            json.dump(entry, outfile)
-            outfile.write('\n')
+        # generate unique data until desired size is met 
+        while len(seen_entries) < num:
+            actions = []
+            for j in range(0, len(structure_choice)):
+                actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
+            computational_tree = get_function(actions)
 
-if __name__ == '__main__':
-    generate_data(args.num)
-    print("main")
+            f = sp_function(computational_tree)
+            neg_lap_f = negative_laplacian(f)
+
+            soln_operators = Parser.get_postfix_from_str(str(f))
+            f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
+
+            condition_type = conditions[torch.randint(0, 2, (1,1))] 
+            if condition_type == 'Dirichlet':
+                bc = calculate_dirichlet(neg_lap_f)
