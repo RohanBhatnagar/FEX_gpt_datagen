@@ -10,11 +10,11 @@ import json
 parser = argparse.ArgumentParser(description='NAS')
 
 parser.add_argument('--tree', default='depth2', type=str)
-parser.add_argument('--num', default=10000, type=int)
+parser.add_argument('--num', default=100, type=int)
 parser.add_argument('--dim', default=2, type=int)
 parser.add_argument('--bc', default='Dirichlet', type=str)
 parser.add_argument('--function', default='Poisson', type=str)
-# domain is assumed to be a [0,1] square, cube, etc. 
+# domain is assumed to be a [0,1] square, cube, etc.
 boundary = [0, 1]
 conditions = ['Dirichlet', 'Neumann', 'Cauchy']
 
@@ -43,7 +43,6 @@ if args.tree == 'depth2':
 
 elif args.tree == 'depth1':
     def basic_tree():
-
         tree = BinaryTree('', False)
         tree.insertLeft('', True)
         tree.insertRight('', True)
@@ -173,9 +172,9 @@ def sp_function(tree):
         return None
     elif tree.rightChild is None and tree.leftChild is None:
         return tree.key(tree.key.args[0][0], 2)
-    elif tree.rightChild is None: 
+    elif tree.rightChild is None:
         return tree.key(sp_function(tree.leftChild), 2) #random number for 5
-    else: 
+    else:
         return tree.key(sp_function(tree.leftChild), sp_function(tree.rightChild)) #random number for 5
 
 # prints a computational binary tree
@@ -185,12 +184,12 @@ def print_fmla(tree):
     if tree.leftChild is None and tree.rightChild is None:
         return func.unary_functions_str[tree.action].format('2','x')
     elif tree.rightChild is None:
-        left_postfix = print_fmla(tree.leftChild) 
+        left_postfix = print_fmla(tree.leftChild)
         return func.unary_functions_str[tree.action].format('2',left_postfix)
     else:
-        left_postfix = print_fmla(tree.leftChild) 
-        right_postfix = print_fmla(tree.rightChild) 
-        return func.binary_functions_str[tree.action].format(left_postfix,right_postfix) #[tree.key.__name__ if hasattr(tree.key, '__name__') else str(tree.key)]
+        left_postfix = print_fmla(tree.leftChild)
+        right_postfix = print_fmla(tree.rightChild)
+        return func.binary_functions_str[tree.action].format(left_postfix,right_postfix)
 
 def get_function(actions):
     global count
@@ -199,7 +198,7 @@ def get_function(actions):
     inorder(computation_tree, actions)
     count = 0
     return computation_tree
- 
+
 def negative_laplacian(f):
     laplacian = sum(sp.diff(f, var, var) for var in symbols)
     return -1 * laplacian
@@ -227,11 +226,10 @@ def calculate_neumann(f):
 def calculate_cauchy(f):
     dirichlet_bc = calculate_dirichlet(f)
     neumann_bc = calculate_neumann(f)
-    bc = {key: (str(dirichlet_bc[key]), str(neumann_bc[key])) for key in dirichlet_bc} # add labels for LLM input
+    bc = {key: (str(dirichlet_bc[key]), str(neumann_bc[key])) for key in dirichlet_bc}
     return bc
 
 def simplify_constants(expr):
-    # round to prepare for parser
     def truncate(val):
         return round(val)
     expr = expr.subs(sp.E, truncate(sp.N(sp.E)))
@@ -246,19 +244,44 @@ def generate_data(num):
     seen_entries = set()
 
     with open('dataset.jsonl', 'w') as outfile:
-        # generate unique data until desired size is met 
-        while len(seen_entries) < num:
+        data_count = 0
+        while data_count < num:
             actions = []
             for j in range(0, len(structure_choice)):
                 actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
             computational_tree = get_function(actions)
 
-            f = sp_function(computational_tree)
-            neg_lap_f = negative_laplacian(f)
+            f = sp_function(computational_tree).simplify()
+            neg_lap_f = negative_laplacian(f).simplify()
 
             soln_operators = Parser.get_postfix_from_str(str(f))
             f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
 
-            condition_type = conditions[torch.randint(0, 2, (1,1))] 
+            condition_type = conditions[torch.randint(0, 2, (1, 1))]
             if condition_type == 'Dirichlet':
                 bc = calculate_dirichlet(neg_lap_f)
+            elif condition_type == 'Neumann':
+                bc = calculate_neumann(neg_lap_f)
+            elif condition_type == 'Cauchy':
+                bc = calculate_cauchy(neg_lap_f)
+
+            tokenized_bc = [condition_type]
+            for key, values in bc.items():
+                tokenized_bc.append(key)
+                tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
+
+            entry = {"Input_Operators": ["Poisson"] + f_operators + tokenized_bc, "Solution_Operators": soln_operators}
+            entry_tuple = (tuple(f_operators), tuple(soln_operators), tuple(tokenized_bc))
+
+            if entry_tuple not in seen_entries:
+                seen_entries.add(entry_tuple)
+                json.dump(entry, outfile)
+                outfile.write('\n')
+                data_count += 1
+
+                if data_count % 10 == 0:
+                    print(data_count, "/", num, "data generated")
+
+if __name__ == '__main__':
+    generate_data(args.num)
+    print("main")
