@@ -69,7 +69,8 @@ class Parser(object):
         operator_list = [operator for operator in operator_list if operator != '']
 
         # Replace numbers with 'const' token
-        const_pattern = re.compile(r'^-?\d+(\.\d+)?$')  # Matches integers and decimals, negative or positive
+        const_pattern = re.compile(r'^-?\d+(\.\d+)?$|^\d*/\d*$')
+        
         operator_list = ['const' if const_pattern.match(token) else token for token in operator_list]
         # print("operator list", operator_list)
 
