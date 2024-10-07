@@ -5,14 +5,21 @@ import math
 import sympy as sp
 
 class Functions:
-    def __init__(self, dimension):
+    def __init__(self, dimension, function_type):
         self.dimension = dimension
+        self.function_type = function_type
         self._generate_functions()
     
     def _generate_functions(self):
+        # spatial symbols 
         self.symbols = sp.symbols(f'x:{self.dimension}')
+
+        # time symbol
+        if(self.function_type == "Heat"):
+            time_symbol = sp.symbols('t')
+            self.symbols = list(self.symbols) + [time_symbol]
+
         E = sp.symbols('E')
-        print(self.symbols)
         c1 = sp.symbols('c1')
         
         self.unary_functions = []

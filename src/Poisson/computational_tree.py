@@ -2,7 +2,7 @@ import numpy as np
 from function import Functions
 import sympy as sp
 
-func = Functions(3)
+func = Functions(2, "Heat")
 
 symbols = func.get_symbols()
 unary = func.get_unary_functions()

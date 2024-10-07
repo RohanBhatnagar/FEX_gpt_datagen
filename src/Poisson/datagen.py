@@ -20,7 +20,7 @@ conditions = ['Dirichlet', 'Neumann', 'Cauchy']
 
 args = parser.parse_args()
 
-func = Functions(args.dim)
+func = Functions(args.dim, "Heat")
 
 unary = func.get_unary_functions()
 binary = func.get_binary_functions()
@@ -63,6 +63,7 @@ elif args.tree == 'depth2_rml':
 
 elif args.tree == 'depth2_rmu':
     print('**************************rmu**************************')
+
     def basic_tree():
         tree = BinaryTree('', False)
 
@@ -79,6 +80,7 @@ elif args.tree == 'depth2_rmu':
 
 elif args.tree == 'depth2_rmu2':
     print('**************************rmu2**************************')
+
     def basic_tree():
         tree = BinaryTree('', False)
 
@@ -127,6 +129,7 @@ leaves_index = []
 leaves = 0
 count = 0
 
+
 def inorder_structure(tree):
     global structure, leaves, count, leaves_index
     if tree:
@@ -137,6 +140,7 @@ def inorder_structure(tree):
             leaves_index.append(count)
         count = count + 1
         inorder_structure(tree.rightChild)
+
 
 inorder_structure(basic_tree())
 print('leaves index:', leaves_index)
@@ -149,6 +153,7 @@ for is_unary in structure:
     else:
         structure_choice.append(len(binary))
 print('tree structure choices', structure_choice)
+
 
 def inorder(tree, actions):
     global count
@@ -166,30 +171,33 @@ def inorder(tree, actions):
         count = count + 1
         inorder(tree.rightChild, actions)
 
-# forms final syms function from a computational tree
+
 def sp_function(tree):
     if tree is None:
         return None
     elif tree.rightChild is None and tree.leftChild is None:
         return tree.key(tree.key.args[0][0], 2)
     elif tree.rightChild is None:
-        return tree.key(sp_function(tree.leftChild), 2) #random number for 5
+        return tree.key(sp_function(tree.leftChild), 2)
     else:
-        return tree.key(sp_function(tree.leftChild), sp_function(tree.rightChild)) #random number for 5
+        return tree.key(sp_function(tree.leftChild), sp_function(tree.rightChild))
 
 # prints a computational binary tree
+
+
 def print_fmla(tree):
     if tree is None:
         return ""
     if tree.leftChild is None and tree.rightChild is None:
-        return func.unary_functions_str[tree.action].format('2','x')
+        return func.unary_functions_str[tree.action].format('2', 'x')
     elif tree.rightChild is None:
         left_postfix = print_fmla(tree.leftChild)
-        return func.unary_functions_str[tree.action].format('2',left_postfix)
+        return func.unary_functions_str[tree.action].format('2', left_postfix)
     else:
         left_postfix = print_fmla(tree.leftChild)
         right_postfix = print_fmla(tree.rightChild)
-        return func.binary_functions_str[tree.action].format(left_postfix,right_postfix)
+        return func.binary_functions_str[tree.action].format(left_postfix, right_postfix)
+
 
 def get_function(actions):
     global count
@@ -199,9 +207,11 @@ def get_function(actions):
     count = 0
     return computation_tree
 
+
 def negative_laplacian(f):
     laplacian = sum(sp.diff(f, var, var) for var in symbols)
     return -1 * laplacian
+
 
 def calculate_dirichlet(f):
     E = sp.symbols('E')
@@ -209,25 +219,31 @@ def calculate_dirichlet(f):
     # boundary defined above
     for symbol in symbols:
         for bound in boundary:
-            subs = {sym: bound if sym == symbol else sp.Symbol(sym.name) for sym in symbols}
+            subs = {sym: bound if sym == symbol else sp.Symbol(
+                sym.name) for sym in symbols}
             f = f.subs(E, 1)
             bc[f'{symbol}={bound}'] = simplify_constants(f.subs(subs))
     return bc
+
 
 def calculate_neumann(f):
     bc = {}
     for symbol in symbols:
         for bound in boundary:
             derivative = sp.diff(f, symbol)
-            subs = {sym: bound if sym == symbol else sp.Symbol(sym.name) for sym in symbols}
+            subs = {sym: bound if sym == symbol else sp.Symbol(
+                sym.name) for sym in symbols}
             bc[f'{symbol}={bound}'] = simplify_constants(derivative.subs(subs))
     return bc
+
 
 def calculate_cauchy(f):
     dirichlet_bc = calculate_dirichlet(f)
     neumann_bc = calculate_neumann(f)
-    bc = {key: (str(dirichlet_bc[key]), str(neumann_bc[key])) for key in dirichlet_bc}
+    bc = {key: (str(dirichlet_bc[key]), str(neumann_bc[key]))
+          for key in dirichlet_bc}
     return bc
+
 
 def simplify_constants(expr):
     def truncate(val):
@@ -239,61 +255,83 @@ def simplify_constants(expr):
 
     return expr
 
+
 def generate_data(num):
     Parser = utils.parser.Parser()
     seen_entries = set()
-    
+
     max_len = 0
     longest_entry = None
 
-    with open('dataset.jsonl', 'w') as outfile:
+    with open(f'data/{args.function}_{args.dim}dim_{args.num}.jsonl', 'w') as outfile:
         data_count = 0
         while data_count < num:
             actions = []
             for j in range(0, len(structure_choice)):
-                actions.append(torch.LongTensor([torch.randint(0, structure_choice[j], (1, 1))]))
+                actions.append(torch.LongTensor(
+                    [torch.randint(0, structure_choice[j], (1, 1))]))
             computational_tree = get_function(actions)
 
             f = sp_function(computational_tree)
-            neg_lap_f = negative_laplacian(f)
 
-            soln_operators = Parser.get_postfix_from_str(str(f))
-            f_operators = Parser.get_postfix_from_str(str(neg_lap_f))
+            if args.function == "Poisson":
+                rhs = negative_laplacian(f)
+
+            elif args.function == "Heat":
+                time_symbol = sp.symbols('t')
+                time_derivative = sp.diff(f, time_symbol)  # du/dt
+                neg_lap_f = negative_laplacian(f)
+                # Heat equation: du/dt - Laplacian(u) = 0
+                rhs = time_derivative - neg_lap_f
+
+            elif args.function == "Wave":
+                print("Wave equation")
+
+            elif args.function == "Schrodinger":
+                print("Schrodinger")
+
+            else:
+                print("Function type not recognized.")
+
+            soln_operators = Parser.get_postfix_from_str(str(f))  # lhs
+            f_operators = Parser.get_postfix_from_str(str(rhs))  # rhs
 
             condition_type = conditions[torch.randint(0, 2, (1, 1))]
             if condition_type == 'Dirichlet':
-                bc = calculate_dirichlet(neg_lap_f)
+                bc = calculate_dirichlet(f)
             elif condition_type == 'Neumann':
-                bc = calculate_neumann(neg_lap_f)
+                bc = calculate_neumann(f)
             elif condition_type == 'Cauchy':
-                bc = calculate_cauchy(neg_lap_f)
+                bc = calculate_cauchy(f)
 
-            tokenized_bc = [condition_type]
-            for key, values in bc.items():
-                tokenized_bc.append(key)
-                tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
+            # exclude bd condition for now, too long
+            # tokenized_bc = [condition_type]
+            # for key, values in bc.items():
+            #     tokenized_bc.append(key)
+            #     tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
 
-            entry = {"Input_Operators": ["Poisson"] + f_operators + tokenized_bc, "Solution_Operators": soln_operators}
-            entry_tuple = (tuple(f_operators), tuple(soln_operators), tuple(tokenized_bc))
+            entry = {"Function Type": args.function,
+                     "RHS": str(rhs), "true_solution": str(f)}
+            # entry_tuple = (tuple(f_operators), tuple(soln_operators), tuple(tokenized_bc))
+            entry_tuple = (tuple(f_operators), tuple(soln_operators))
 
             if entry_tuple not in seen_entries:
                 seen_entries.add(entry_tuple)
                 json.dump(entry, outfile)
                 outfile.write('\n')
                 data_count += 1
-                
+
                 # Track the longest entry
-                entry_len = len(entry["Input_Operators"]) + len(entry["Solution_Operators"])
+                entry_len = len(entry["RHS"]) + len(entry["true_solution"])
                 if entry_len > max_len:
                     max_len = entry_len
                     longest_entry = entry
-                    
+
                 if data_count % 10 == 0:
-                    print(data_count, "/", num, "data generated          max_len: ", max_len)
-                    
-    print("MAX LEN + ", max_len, " & Longest entry: ", longest_entry)
-                
+                    print(f'{data_count}/{num}')
+
+    print(f'{args.num} samples generated for {args.function}\nMax Length was {max_len}\nLongest entry was {longest_entry}')
+
 
 if __name__ == '__main__':
     generate_data(args.num)
-    print("main")
