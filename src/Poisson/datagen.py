@@ -20,7 +20,7 @@ conditions = ['Dirichlet', 'Neumann', 'Cauchy']
 
 args = parser.parse_args()
 
-func = Functions(args.dim, "Heat")
+func = Functions(args.dim, args.function)
 
 unary = func.get_unary_functions()
 binary = func.get_binary_functions()
@@ -273,19 +273,20 @@ def generate_data(num):
             computational_tree = get_function(actions)
 
             f = sp_function(computational_tree)
+            coefficients = [] 
 
             if args.function == "Poisson":
                 rhs = negative_laplacian(f)
 
             elif args.function == "Heat":
-                time_symbol = sp.symbols('t')
-                time_derivative = sp.diff(f, time_symbol)  # du/dt
-                neg_lap_f = negative_laplacian(f)
-                # Heat equation: du/dt - Laplacian(u) = 0
-                rhs = time_derivative - neg_lap_f
+                # Heat equation: du/dt = alpha*Laplacian(u)
+                rhs = negative_laplacian(f)
+                coefficients.append("a")
 
             elif args.function == "Wave":
-                print("Wave equation")
+                # wave equation: du2/d2t = c**2*Laplacian(f)
+                rhs = negative_laplacian(f)
+                coefficients.append("c^2")
 
             elif args.function == "Schrodinger":
                 print("Schrodinger")
@@ -293,8 +294,10 @@ def generate_data(num):
             else:
                 print("Function type not recognized.")
 
-            soln_operators = Parser.get_postfix_from_str(str(f))  # lhs
-            f_operators = Parser.get_postfix_from_str(str(rhs))  # rhs
+            # soln_operators = Parser.get_postfix_from_str(str(f))  # lhs
+            # f_operators = Parser.get_postfix_from_str(str(rhs))  # rhs
+            soln_operators = str(f)
+            f_operators = str(rhs)
 
             condition_type = conditions[torch.randint(0, 2, (1, 1))]
             if condition_type == 'Dirichlet':
@@ -310,8 +313,8 @@ def generate_data(num):
             #     tokenized_bc.append(key)
             #     tokenized_bc.extend(Parser.get_postfix_from_str(str(values)))
 
-            entry = {"Function Type": args.function,
-                     "RHS": str(rhs), "true_solution": str(f)}
+            entry = {"Function Type": args.function, "Coefficients": str(coefficients),
+                     "RHS": str(soln_operators), "true_solution": str(f_operators)}
             # entry_tuple = (tuple(f_operators), tuple(soln_operators), tuple(tokenized_bc))
             entry_tuple = (tuple(f_operators), tuple(soln_operators))
 
